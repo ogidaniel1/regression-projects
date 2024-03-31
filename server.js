@@ -1,38 +1,22 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const { spawn } = require('child_process');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 3001; // Choose a port for your Node.js server
 
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.post('/predict', (req, res) => {
-    const data = req.body;
-
-    const pythonProcess = spawn('python', ['model.py', JSON.stringify(data)]);
-
-    let prediction = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-        prediction += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-        console.error(`Error from python script: ${data}`);
-        res.status(500).json({ error: 'Internal server error' });
-    });
-
-    pythonProcess.on('exit', (code) => {
-        if (code === 0) {
-            res.json({ prediction: parseFloat(prediction) });
-        } else {
-            console.error(`Python script exited with code ${code}`);
-            res.status(500).json({ error: 'Internal server error' });
+// Proxy POST requests to Flask application
+app.post('/predict', async (req, res) => {
+ 
+        try {
+            const flaskResponse = await axios.post('http://localhost:5000/predict', req.body);
+            res.json(flaskResponse.data);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
-    });
-});
-
+    })
+// Start the Express server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Node.js server running on port ${PORT}`);
 });
