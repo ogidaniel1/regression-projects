@@ -23,7 +23,8 @@ def predict():
         smoker = 1 if data['smoker'].lower() == 'yes' else 0
 
         prediction = model.predict([[data['age'], data['bmi'], data['children'], smoker]])
-        return jsonify({'prediction': float(prediction)})
+        # Return prediction as part of the response
+        return jsonify({'prediction': float(prediction[0])})  # Extract the prediction value from the array
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
